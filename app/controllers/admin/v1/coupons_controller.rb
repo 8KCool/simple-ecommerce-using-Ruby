@@ -18,6 +18,12 @@ module Admin
         save_coupon!
       end
 
+      def destroy
+        @coupon.destroy!
+      rescue
+        render_error(fields: @coupon.errors.messages)
+      end
+
       private
 
       def load_coupon

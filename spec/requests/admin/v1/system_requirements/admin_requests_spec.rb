@@ -115,4 +115,31 @@ RSpec.describe 'Admin::V1::SystemRequirements as :admin', type: :request do
       end
     end
   end
+
+  context 'DELETE /system_requirements/:id' do
+    let!(:system_requirement) { create(:system_requirement) }
+    let(:url) { "/admin/v1/system_requirements/#{system_requirement.id}" }
+
+    it 'removes system_requirement' do
+      expect do
+        delete url, headers: auth_header(user)
+      end.to change(SystemRequirement, :count).by(-1)
+    end
+
+    it 'returns success status' do
+      delete url, headers: auth_header(user)
+      expect(response).to have_http_status(:no_content)
+    end
+
+    it 'does not return any body content' do
+      delete url, headers: auth_header(user)
+      expect(body_json).to_not be_present
+    end
+
+    it 'returns error when remove system_requirement associated with a game' do
+      create_list(:game, 3, system_requirement: system_requirement)
+      delete url, headers: auth_header(user)
+      expect(body_json['errors']['fields']).to have_key('base')
+    end
+  end
 end

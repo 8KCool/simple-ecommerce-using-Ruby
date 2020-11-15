@@ -18,6 +18,10 @@ module Admin
         save_user!
       end
 
+      def destroy
+        @user.destroy!
+      end
+
       private
 
       def load_user

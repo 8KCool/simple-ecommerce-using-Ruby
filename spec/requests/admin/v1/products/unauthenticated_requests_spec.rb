@@ -33,7 +33,7 @@ RSpec.describe "Admin V1 Product without authentication", type: :request do
     let(:url) { "/admin/v1/products/#{product.id}" }
 
     before(:each) { patch url }
-    
+
     include_examples "unauthenticated access"
   end
 
@@ -42,7 +42,7 @@ RSpec.describe "Admin V1 Product without authentication", type: :request do
     let(:url) { "/admin/v1/products/#{product.id}" }
 
     before(:each) { delete url }
-    
+
     include_examples "unauthenticated access"
   end
 end

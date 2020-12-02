@@ -106,6 +106,22 @@ RSpec.describe 'Admin::V1::Licenses', type: :request do
     end
   end
 
+  context 'GET /license/:id' do
+    let(:license) { create(:license) }
+    let(:url) { "/admin/v1/licenses/#{license.id}" }
+
+    it 'returns requested license' do
+      get url, headers: auth_header(user)
+      expect_license = build_license_json(license)
+      expect(body_json['license']).to eq(expect_license)
+    end
+
+    it 'returns success status' do
+      get url, headers: auth_header(user)
+      expect(response).to have_http_status(:ok)
+    end
+  end
+
   def build_license_json(object)
     json = object.as_json(only: [:id, :key])
     json['game'] = object.game.as_json(only: %i(mode release_date developer))

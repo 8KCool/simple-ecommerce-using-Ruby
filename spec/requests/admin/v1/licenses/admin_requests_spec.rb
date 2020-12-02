@@ -122,6 +122,57 @@ RSpec.describe 'Admin::V1::Licenses', type: :request do
     end
   end
 
+  context 'PATCH  /licenses/:id' do
+    let(:license) { create(:license) }
+    let(:url) { "/admin/v1/licenses/#{license.id}" }
+
+    context 'with valid params' do
+      let(:new_key) { SecureRandom.uuid }
+      let(:license_params) { { license: { key: new_key } }.to_json }
+
+      it 'updates license' do
+        patch url, headers: auth_header(user), params: license_params
+        license.reload
+        expect(license.key).to eq(new_key)
+      end
+
+      it 'returns updated license' do
+        patch url, headers: auth_header(user), params: license_params
+        license.reload
+        expect_category = build_license_json(license)
+        expect(body_json['license']).to eq(expect_category)
+      end
+
+      it 'returns success status' do
+        patch url, headers: auth_header(user), params: license_params
+        expect(response).to have_http_status(:ok)
+      end
+    end
+
+    context 'with invalid params' do
+      let(:license_invalid_params) do
+        { license: attributes_for(:license, key: nil) }.to_json
+      end
+
+      it 'does not update license' do
+        old_key = license.key
+        patch url, headers: auth_header(user), params: license_invalid_params
+        license.reload
+        expect(license.key).to eq(old_key)
+      end
+
+      it 'returns error messages' do
+        patch url, headers: auth_header(user), params: license_invalid_params
+        expect(body_json['errors']['fields']).to have_key('key')
+      end
+
+      it 'returns unprocessable_entity status' do
+        patch url, headers: auth_header(user), params: license_invalid_params
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+    end
+  end
+
   def build_license_json(object)
     json = object.as_json(only: [:id, :key])
     json['game'] = object.game.as_json(only: %i(mode release_date developer))

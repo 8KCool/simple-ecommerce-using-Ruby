@@ -41,7 +41,7 @@ RSpec.describe 'Admin::V1::Licenses', type: :request do
 
       it 'returns licenses limited by pagination' do
         get url, headers: auth_header(user), params: pagination_params
-        expected_licenses = licenses[5..9].map do |license| 
+        expected_licenses = licenses[5..9].map do |license|
           build_license_json(license)
         end
         expect(body_json['licenses']).to contain_exactly(*expected_licenses)
@@ -50,6 +50,58 @@ RSpec.describe 'Admin::V1::Licenses', type: :request do
       it 'returns success status' do
         get url, headers: auth_header(user), params: pagination_params
         expect(response).to have_http_status(:ok)
+      end
+    end
+  end
+
+  context 'POST /licenses' do
+    let(:url) { '/admin/v1/licenses' }
+
+    context 'with valid params' do
+      let(:game) { create(:game) }
+      let(:license_params) do
+        {
+          license: attributes_for(:license).merge(game_id: game.id, user_id: user.id)
+        }.to_json
+      end
+
+      it 'adds a new license' do
+        expect do
+          post url, headers: auth_header(user), params: license_params
+        end.to change(License, :count).by(1)
+      end
+
+      it 'returns last added license' do
+        post url, headers: auth_header(user), params: license_params
+        expect_license = build_license_json(License.last)
+        expect(body_json['license']).to eq(expect_license)
+      end
+
+      it 'returns success status' do
+        post url, headers: auth_header(user), params: license_params
+        expect(response).to have_http_status(:ok)
+      end
+    end
+
+    context 'with invalid params' do
+      let(:license_invalid_params) do
+        { license: attributes_for(:license, game_id: nil) }.to_json
+      end
+
+      it 'does not add a new license' do
+        expect do
+          post url, headers: auth_header(user), params: license_invalid_params
+        end.to_not change(License, :count)
+      end
+
+      it 'returns error messages' do
+        post url, headers: auth_header(user), params: license_invalid_params
+        expect(body_json['errors']['fields']).to have_key('game')
+      end
+
+      it 'returns unprocessable_entity status' do
+        post url, headers: auth_header(user), params: license_invalid_params
+        expect(response).to have_http_status(:unprocessable_entity)
       end
     end
   end

@@ -20,6 +20,10 @@ module Admin
         save_license!
       end
 
+      def destroy
+        @license.destroy!
+      end
+
       private
 
       def load_licenses
